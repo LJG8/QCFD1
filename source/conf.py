@@ -25,6 +25,27 @@ author = 'LJG'
 release = 'V1.0'
 
 
+latex_engine = "xelatex"
+latex_elements = {
+    'papersize': 'a4paper',
+    'utf8extra': '',
+    'inputenc': '',
+    'cmappkg': '',
+    'fontenc': '',
+    'figure_align': 'htbp',
+    'preamble': r'''
+        \usepackage[draft]{minted}
+        \fvset{breaklines=true}
+        \usepackage{xeCJK}
+        \parindent 2em
+        \setcounter{tocdepth}{3}
+        \renewcommand\familydefault{\ttdefault}
+        \renewcommand\CJKfamilydefault{\CJKrmdefault}
+        \sphinxtableofcontents
+        'extraclassoptions': 'openany,oneside',
+    ''',
+}
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
