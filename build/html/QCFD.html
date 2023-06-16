@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>介绍 &mdash; QCFD V1.0 文档</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            QCFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="搜索文档" aria-label="搜索文档" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="导航菜单">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">介绍</a></li>
+<li><a class="reference internal" href="#id2">第1章 安装</a></li>
+<li><a class="reference internal" href="#id3">第2章 功能模块</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="移动版导航菜单" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QCFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="页面导航">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">介绍</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/QCFD.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="id1">
+<h1>介绍<a class="headerlink" href="#id1" title="永久链接至标题"></a></h1>
+<p>计算流体力学(Computational Fluid Dynamics, CFD)是随着计算机的发展而产生的介于数学、流体力学和计算机科学之间的交叉学科，主要研究内容是通过计算机和数值计算理论来求解流体力学的控制方程，对流体力学问题进行仿真分析。CFD不仅作为研究工具，而且还作为设计工具在轨道交通、环境工程、航空航天等领域发挥重要作用。随着研究问题的不断深入，科学技术人员对流动分辨率的要求不断提高，使得计算规模不断增长，这严重挑战了传统计算机的算力，限制了工程设计效率的进一步提高。量子比特的叠加和纠缠特性使量子计算机具有固有的并行属性，因此量子计算通常比经典计算具有指数优势。</p>
+<p>自HHL算法被提出并理论上实现了大型线性系统的快速求解，量子计算在流体计算场景中的实用价值被愈发重视，有望突破目前流体计算面临的计算性能瓶颈、拓宽流体计算可处理问题的规模、提高流体计算时间效率。本源量禹2.0是一款集前处理、求解和后处理为一体的量子计算流体力学软件，其核心在于使用基于HHL算法和变分算法的量子线性求解器代替经典求解器，并通过多种预处理器技术和子空间迭代技术，实现了量子-经典混合算法在虚拟机上的加速计算。</p>
+<p>此版本相比于本源量禹1.0而言，在算法、体验和功能方面进行了优化和改进，其中在量子算法方面，不仅提高了子空间HHL算法的计算稳定性，而且新增了所需量子比特数少和量子线路浅的变分量子线性求解器，从整体上提高并丰富了求解器功能；在使用体验方面，设计了全新的符合计算流体力学逻辑的软件界面和交互，降低了用户操作门槛；在前后处理功能方面，支持基本几何模型的构建、布尔运算操作和非结构网格的生成，丰富了后处理的多样性并完善了可视化功能。</p>
+</section>
+<section id="id2">
+<h1>第1章 安装<a class="headerlink" href="#id2" title="永久链接至标题"></a></h1>
+<p>在本源量子云 (<a class="reference external" href="https://qcloud.originqc.com.cn/QCFD">https://qcloud.originqc.com.cn/QCFD</a>) 点击下载并双击OriginQ-QCFD.exe，根据向导安装。</p>
+<ol class="arabic simple">
+<li><p>选择软件安装语言，默认为“中文简体”，点击“OK”按钮，安装中文版软件，若需要安装英文版软件，请选择安装语言为“English”；</p></li>
+</ol>
+<img alt="_images/1.1.png" class="align-center" src="_images/1.1.png" />
+<p>图1-1 选择安装语言</p>
+<ol class="arabic simple" start="2">
+<li><p>在弹出的安装界面点击“我同意”；</p></li>
+</ol>
+<img alt="_images/1-2.png" class="align-center" src="_images/1-2.png" />
+<p>图1-2 选择“我同意”</p>
+<ol class="arabic simple" start="3">
+<li><p>在“安装选项”界面，指定为哪位用户安装该软件，然后点击下一步，并指定安装路径。</p></li>
+</ol>
+<img alt="_images/1-3.png" class="align-center" src="_images/1-3.png" />
+<p>图1-3 安装选项页面</p>
+</section>
+<section id="id3">
+<h1>第2章 功能模块<a class="headerlink" href="#id3" title="永久链接至标题"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2023, LJG.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用的 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a> 开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

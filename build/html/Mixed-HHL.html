@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Mixed-HHL Solver &mdash; QCFD V1.0 文档</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            QCFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="搜索文档" aria-label="搜索文档" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="导航菜单">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">The Mixed-HHL Solver</a><ul>
+<li><a class="reference internal" href="#algorithm-target">Algorithm target</a></li>
+<li><a class="reference internal" href="#algorithm-overview">Algorithm overview</a></li>
+<li><a class="reference internal" href="#interface-introduction">Interface introduction</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="移动版导航菜单" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QCFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="页面导航">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">The Mixed-HHL Solver</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Mixed-HHL.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-mixed-hhl-solver">
+<h1>The Mixed-HHL Solver<a class="headerlink" href="#the-mixed-hhl-solver" title="永久链接至标题"></a></h1>
+<p>The Mixed-HHL solver does not directly use quantum algorithm to solve the original system of equations, but first uses the “Krylov subspace” method to reduce the dimension of the original linear space and then uses the HHL algorithm to solve the problem. Since the Full Orthogonalization Method(FOM) belongs to the orthogonal projection method, the solution stability existence requires A to be positive definite, and this condition is often not satisfied in practical computations. For the oblique projection methods such as Generalized Minimum Residual（GMRES), the requirement that matrix A is non-singular is easy to be satisfied, so the GMRES method has very high stability in practical calculation. However, the convergence speed of GMRES method is much slower than that of FOM method.Combining the advantages of the two methods, a Mixed-HHL linear solution algorithm is proposed.</p>
+<section id="algorithm-target">
+<h2>Algorithm target<a class="headerlink" href="#algorithm-target" title="永久链接至标题"></a></h2>
+<hr class="docutils" />
+<p>Solve the problems of unstable solution and slow convergence when FOM method and GMRES method are used separately, and accelerate the solution speed of HHL algorithm.</p>
+</section>
+<section id="algorithm-overview">
+<h2>Algorithm overview<a class="headerlink" href="#algorithm-overview" title="永久链接至标题"></a></h2>
+<hr class="docutils" />
+<p>The overall calculation process of the mixed-HHL solver is shown in the figure below.</p>
+<img alt="_images/Mixed-HHL.png" src="_images/Mixed-HHL.png" />
+<p>First, the solver is provided with A system of linear equations containing the coefficient matrix A and vector b.When calling the mixed-hhl solver, we first need to give an initial solution.The selection of the initial solution is arbitrary in principle, and 0 is generally adopted as the initial solution.</p>
+<ol class="arabic">
+<li><p>The initial residual goes into the judgment module 1 as input, which is used to decide whether the mixed-HHL solver chooses the fom or gmres kernel. In the kernel module, the first part is the MGS-Arnoldi algorithm. The function of the algorithm is to receive the coefficient matrix A and the residual b, and output the orthonormal basis of the Krylov subspace composed of A and b and the corresponding Hessenberg matrix, that is, the low-dimensional equation system, and then input to the second module.</p></li>
+<li><p>The second module is the iterative hhl algorithm module, whose function is to solve the low-dimensional system of equations obtained in the previous step. Considering the accuracy loss of the hhl algorithm, the iterative function is added to improve the accuracy of the HHL solution. Judgment module 2 is used to judge whether the residual of the solution obtained by the HHL algorithm meets the corresponding accuracy requirements. If not, the iterative solution is continued. If it does, the low-dimensional solution is restored to high-dimensional and the FOM/GMRES solution kernel is exited and the judgment module 3 is entered.</p></li>
+<li><p>The function of judgment module 3 is to detect whether the residual error of the high-dimensional solution output by the FOM/GMRES kernel meets the accuracy requirement or whether the number of kernel iterations exceeds the maximum number of allowed iterations. If it is false, it returns to judgment module 1 for iteration.</p>
+<blockquote>
+<div><p>The principle of HHL algorithm will not be repeated here.</p>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="interface-introduction">
+<h2>Interface introduction<a class="headerlink" href="#interface-introduction" title="永久链接至标题"></a></h2>
+<hr class="docutils" />
+<p>Mixed-HHL solver designed <code class="docutils literal notranslate"><span class="pre">iter_</span> <span class="pre">sparse_</span> <span class="pre">mixed_</span> <span class="pre">subspace_</span> <span class="pre">The</span> <span class="pre">solver</span></code> interface is used to calculate the solution of a linear system. This interface requires seven parameters. The specific parameters are described as follows</p>
+<blockquote>
+<div><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">iter_sparse_mixed_subspace_solver</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="o">&gt;&gt;&gt;&amp;</span><span class="w"> </span><span class="n">s_jacobian</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">maxdim</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">pre</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">shiftvectormode</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">iter_Kyrlov_subspace_step</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w">  </span><span class="n">iter_Kyrlov_subspace_pre</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="o">**</span><span class="n">Parameters</span><span class="o">:**</span><span class="w"></span>
+<span class="w">    </span><span class="cm">/**</span>
+<span class="cm">    * @brief iter_mixed_subspace_hhl solver code</span>
+<span class="cm">    * @param[in] s_jacobian: matrix A of Ax = b</span>
+<span class="cm">    * @param[in] b: vector b of Ax=b</span>
+<span class="cm">    * @param[in] maxdim: max dimension of Kyrlov subspace</span>
+<span class="cm">    * @param[in] pre: precision of single iterative HHL solver</span>
+<span class="cm">    * @param[in] shiftvectormode: decide shiftvector format((0) 1 is (not) turn on the dynamic relaxation module)</span>
+<span class="cm">    * @param[in] iter_Kyrlov_subspace_step：maximum number of iterations of Kyrlov subspace method</span>
+<span class="cm">    * @param[in] iter_Kyrlov_subspace_pre: calculation accuracy of Kyrlov subspace method</span>
+<span class="cm">    **/</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="永久链接至标题"></a></h2>
+<hr class="docutils" />
+<blockquote>
+<div><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;QSolver/include/Qsolver.h&quot;</span><span class="cp"></span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">Eigen</span><span class="o">::</span><span class="n">MatrixXd</span><span class="w"> </span><span class="n">mat</span><span class="p">;</span><span class="w"></span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">Eigen</span><span class="o">::</span><span class="n">VectorXd</span><span class="w"> </span><span class="n">vec</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">std</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">dimension</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">mat</span><span class="w"> </span><span class="n">jacobian</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mat</span><span class="o">::</span><span class="n">Zero</span><span class="p">(</span><span class="n">dimension</span><span class="p">,</span><span class="w"> </span><span class="n">dimension</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="n">dimension</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dimension</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">jacobian</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pow</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dimension</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="n">jacobian</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&quot;The input matrix is&quot;</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">jacobian</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">s_jacobian</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">s_jacobian</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">dimension</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dimension</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">dimension</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">jacobian</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="w">            </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">s_jacobian</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">make_pair</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">));</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">(</span><span class="n">dimension</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxdim</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">pre</span><span class="o">=</span><span class="w"> </span><span class="mf">1e-8</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">shiftvectormode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">iter_Kyrlov_subspace_step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20000</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">iter_Kyrlov_subspace_pre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-8</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">iter_sparse_mixed_subspace_solver</span><span class="p">(</span><span class="n">s_jacobian</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">maxdim</span><span class="p">,</span><span class="w"> </span><span class="n">pre</span><span class="p">,</span><span class="n">shiftvectormode</span><span class="p">,</span><span class="w"> </span><span class="n">iter_Kyrlov_subspace_step</span><span class="p">,</span><span class="w"> </span><span class="n">iter_Kyrlov_subspace_pre</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&quot;The solution for a linear system is&quot;</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="n">x</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>This example produces the following result:</p>
+<blockquote>
+<div><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">The</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="n">matrix</span><span class="w"> </span><span class="n">is</span><span class="w"></span>
+<span class="mi">1</span><span class="w">  </span><span class="mi">0</span><span class="w">  </span><span class="mi">0</span><span class="w">  </span><span class="mi">0</span><span class="w"></span>
+<span class="mi">0</span><span class="w">  </span><span class="mi">2</span><span class="w">  </span><span class="mi">1</span><span class="w">  </span><span class="mi">0</span><span class="w"></span>
+<span class="mi">0</span><span class="w">  </span><span class="mi">0</span><span class="w">  </span><span class="mi">5</span><span class="w">  </span><span class="mi">2</span><span class="w"></span>
+<span class="mi">0</span><span class="w">  </span><span class="mi">0</span><span class="w">  </span><span class="mi">0</span><span class="w"> </span><span class="mi">10</span><span class="w"></span>
+<span class="n">The</span><span class="w"> </span><span class="n">solution</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">linear</span><span class="w"> </span><span class="n">system</span><span class="w"> </span><span class="n">is</span><span class="w"></span>
+<span class="mi">1</span><span class="w"></span>
+<span class="mf">0.42</span><span class="w"></span>
+<span class="mf">0.16</span><span class="w"></span>
+<span class="mf">0.1</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2023, LJG.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用的 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a> 开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
